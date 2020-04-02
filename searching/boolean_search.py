@@ -16,7 +16,12 @@ def query(inverted_index, query):
 				result_set = set(inverted_index[term].keys())
 			else:
 				result_set = result_set.intersection(set(inverted_index[term].keys()))
-
 	return list(result_set)
 
 
+def dump_results(results, output_file):
+    f = open(output_file, "w")
+    for found_file in results:
+        f.write(found_file)
+        f.write("\n")
+    f.close()

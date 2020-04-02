@@ -13,7 +13,7 @@ from utils.utils import *
 
 pp = pprint.PrettyPrinter(indent = 4)
 
-MODELS_DICT = {'boolean': boolean_search.query, 'vectorial': vectorial_search.query}
+MODELS_DICT = {'boolean': boolean_search, 'vectorial': vectorial_search}
 
 PATH = os.path.join(os.getcwd(), 'data/corpus')
 
@@ -25,7 +25,7 @@ def main(argc, argv):
         print("usage: python3 main.py model [query]")
         return 2
 
-    if argv[1] not in MODELS_DICT or argv[1] != 'boolean':
+    if argv[1] not in MODELS_DICT:
         print("Model '%s' is not supported" % argv[1], file = sys.stderr)
         return 1
 
@@ -40,7 +40,7 @@ def main(argc, argv):
     tokenized_corpus = build_corpus(PATH)
 
     ## Dumping the tokenized_corpus on disk
-    save_file_pickle(tokenized_corpus, "tokenized_corpus.dat")
+    # save_file_pickle(tokenized_corpus, "tokenized_corpus.dat")
 
     print("Took %f s" % (time.time() - start))
     print("Done !\n")
@@ -52,7 +52,7 @@ def main(argc, argv):
 
     frequencies_index = build_index_frequencies(tokenized_corpus)
     ## Dumping the tokenized_corpus on disk
-    save_file_pickle(frequencies_index, "frequencies_index.dat")
+    # save_file_pickle(frequencies_index, "frequencies_index.dat")
 
     print("Took %f s" % (time.time() - start))
     print("Done !\n")
@@ -62,7 +62,7 @@ def main(argc, argv):
     start = time.time()
     
     inverted_index = build_inverted_index_frequencies(frequencies_index)
-    save_file_pickle(inverted_index, "inverted_index.dat")
+    # save_file_pickle(inverted_index, "inverted_index.dat")
 
     print("Took %f s" % (time.time() - start))
     print("Done !\n")
@@ -102,14 +102,13 @@ def main(argc, argv):
 
         start_time = time.time()
 
-        result = MODELS_DICT[chosen_model](inverted_index, query)
+        result = MODELS_DICT[chosen_model].query(inverted_index, query)
 
         end_time = time.time()
         diff_time = end_time - start_time
 
         print("Took ..................................... %f s" % (diff_time))
         print("Results length ........................... %d" % (len(result)))
-        print("Results are output in .................... './outputs/%d.out'" % (i))
 
         requests_time.append(diff_time)
 
@@ -117,12 +116,10 @@ def main(argc, argv):
         result.sort()
 
         ## Flashing results to disk
-        f = open("./outputs/%d.out" % i, "w")
-        for found_file in result:
-            f.write(found_file)
-            f.write("\n")
-        f.close()
+        MODELS_DICT[chosen_model].dump_results(result, "./outputs/%d.out" % i)
+
         print("")
+        print("Results are output in .................... './outputs/%d.out'" % (i))
 
     print("Average query processing time ............ %fs" % (sum(requests_time) / len(requests_time)))
 
