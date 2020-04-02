@@ -14,8 +14,6 @@ def parse_document(document_path):
 
 def build_corpus(corpus_directory_path):
 
-    pwd = os.getcwd()
-
     corpus = {}
 
     for (directory_path, directories, files) in os.walk(corpus_directory_path):
@@ -37,13 +35,10 @@ def build_corpus(corpus_directory_path):
 def build_index_frequencies(tokenized_corpus):
 
     frequencies_index = {}
-
     for key in tokenized_corpus:
 
-        frequencies_index = {key: {}}
-
+        frequencies_index[key] = {}
         for document in tokenized_corpus[key]:
-
             frequencies_index[key][document] = {}
 
             for token in tokenized_corpus[key][document]:
@@ -51,7 +46,6 @@ def build_index_frequencies(tokenized_corpus):
                     frequencies_index[key][document][token] += 1
                 else:
                     frequencies_index[key][document][token] = 1
-
     return frequencies_index
 
 
@@ -62,16 +56,9 @@ def build_inverted_index_frequencies(frequencies_index):
     for key in frequencies_index:
         for document in frequencies_index[key]:
             for token in frequencies_index[key][document]:
-
-                if token in inverted_index:
-
-                    if document in inverted_index[token]:
-                        inverted_index[token][document] += 1
-                    else:
-                        inverted_index[token][document] = 1
-
-                else:
-                    inverted_index[token] = {document: 1}
+                if token not in inverted_index:
+                    inverted_index[token] = {}
+                inverted_index[token][document] = frequencies_index[key][document][token]
 
     return inverted_index
 

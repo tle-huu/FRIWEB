@@ -4,9 +4,11 @@ import os
 import sys
 from enum import Enum
 import pprint
+import time
 
 from indexing.indexing import *
 from searching import boolean_search
+from utils.utils import *
 
 
 class Models(Enum):
@@ -37,19 +39,34 @@ def main(argc, argv):
 
     choosen_model = MODELS_DICT[argv[1]]
 
+
+    ## Tokenizing corpus
     print("Building corpus...")
+    start = time.time()
+
     corp = build_corpus(PATH)
+
+    print("Took %f" % (time.time() - start))
     print("Done !")
 
+
+    ## Building direct frequencies index
     print("Building frequencies index...")
+    start = time.time()
     frequencies_index = build_index_frequencies(corp)
+
+    print("Took %f" % (time.time() - start))
     print("Done !")
 
-
+    ## Building inverted frequencies index
     print("Building inverted index...")
-    inverted_index = build_inverted_index_frequencies(corp)
-    print("Done !")
+    start = time.time()
+    inverted_index = build_inverted_index_frequencies(frequencies_index)
 
+    print("Done !")
+    print("Took %f" % (time.time() - start))
+
+    ## Searching
     queries = ["we are",
             "stanford class",
             "stanford students",
@@ -66,8 +83,10 @@ def main(argc, argv):
         query = queries[i]
         result = boolean_search.query(inverted_index, query)
         result.sort()
+
         print("[%s] -> %d" % (query, len(result)))
-        continue
+
+        ## Flashing result to disk
         f = open("%d.out" % i, "a")
         for found_file in result:
             f.write(found_file)
