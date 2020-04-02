@@ -8,37 +8,28 @@ import time
 
 from indexing.indexing import *
 from searching import boolean_search
+from searching import vectorial_search
 from utils.utils import *
-
-
-class Models(Enum):
-    BOOLEAN = 1
-    VECTORIAL = 2
-
-MODELS_DICT = {'boolean': Models.BOOLEAN, 'vectorial': Models.VECTORIAL}
-
-## Boolean model is the default one
-choosen_model = Models.BOOLEAN
 
 pp = pprint.PrettyPrinter(indent = 4)
 
-
+MODELS_DICT = {'boolean': boolean_search.query, 'vectorial': vectorial_search.query}
 
 PATH = os.path.join(os.getcwd(), 'data/corpus')
 
 def main(argc, argv):
 
+    ## TODO: Make a genuine args parser
+    ## parser = argparse.ArgumentParser(description='Friweb project')
     if argc < 2:
         print("usage: python3 main.py model [query]")
         return 2
 
-
-    if argv[1] not in MODELS_DICT:
+    if argv[1] not in MODELS_DICT or argv[1] != 'boolean':
         print("Model '%s' is not supported" % argv[1], file = sys.stderr)
         return 1
 
-    choosen_model = MODELS_DICT[argv[1]]
-
+    chosen_model = argv[1]
 
     ## Tokenizing corpus
     print("Building tokenized corpus...")
@@ -47,7 +38,7 @@ def main(argc, argv):
     corp = build_corpus(PATH)
 
     print("Took %f s" % (time.time() - start))
-    print("Done !")
+    print("Done !\n")
 
 
     ## Building direct frequencies index
@@ -56,15 +47,15 @@ def main(argc, argv):
     frequencies_index = build_index_frequencies(corp)
 
     print("Took %f s" % (time.time() - start))
-    print("Done !")
+    print("Done !\n")
 
     ## Building inverted frequencies index
     print("Building frequencies inverted index...")
     start = time.time()
     inverted_index = build_inverted_index_frequencies(frequencies_index)
 
-    print("Done !")
     print("Took %f s" % (time.time() - start))
+    print("Done !\n")
 
 
     ## Searching
@@ -84,8 +75,9 @@ def main(argc, argv):
         ## Appending concatenation of all queries
         queries.append(' '.join(queries))
 
-    print("Queries: ")
+    print("Queries: ", end = '')
     pp.pprint(queries)
+    print("")
 
     # Lazy import
     from pathlib import Path
@@ -96,23 +88,25 @@ def main(argc, argv):
     requests_time = []
     for i in range(len(queries)):
         query = queries[i]
-        print("Processing query: '%s'" % query)
+        print("Processing query ......................... '%s'" % query)
 
         start_time = time.time()
 
-        result = boolean_search.query(inverted_index, query)
+        result = MODELS_DICT[chosen_model](inverted_index, query)
 
         end_time = time.time()
         diff_time = end_time - start_time
-        print("Took %f s" % (diff_time))
-        print("Results length: %d" % (len(result)))
-        print("Results for '%s' are output in './outputs/%d.out'" % (query, i))
+
+        print("Took ..................................... %f s" % (diff_time))
+        print("Results length ........................... %d" % (len(result)))
+        print("Results are output in .................... './outputs/%d.out'" % (i))
 
         requests_time.append(diff_time)
 
-
+        ## To ease the diff with Celine's outputs
         result.sort()
-        ## Flashing result to disk
+
+        ## Flashing results to disk
         f = open("./outputs/%d.out" % i, "w")
         for found_file in result:
             f.write(found_file)
@@ -120,8 +114,7 @@ def main(argc, argv):
         f.close()
         print("")
 
-    print("Average query processing time: %fs" % (sum(requests_time) / len(requests_time)))
-    print("Output results are in the 'outputs' folder.")
+    print("Average query processing time ............ %fs" % (sum(requests_time) / len(requests_time)))
 
     return 0
 

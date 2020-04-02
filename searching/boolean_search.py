@@ -3,7 +3,9 @@ def query(inverted_index, query):
 
 	result_set = set()
 
-	tokenized_query = query.split(" ")
+	## For basic boolean search, duplicates don't matter
+	tokenized_query = set(query.split(" "))
+
 
 	for term in tokenized_query:
 
