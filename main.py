@@ -28,8 +28,8 @@ PATH = os.path.join(os.getcwd(), 'data/corpus')
 
 def main(argc, argv):
 
-    if argc != 3:
-        print("usage: python3 main.py model query [output_file]")
+    if argc < 2:
+        print("usage: python3 main.py model [query]")
         return 2
 
 
@@ -41,57 +41,87 @@ def main(argc, argv):
 
 
     ## Tokenizing corpus
-    print("Building corpus...")
+    print("Building tokenized corpus...")
     start = time.time()
 
     corp = build_corpus(PATH)
 
-    print("Took %f" % (time.time() - start))
+    print("Took %f s" % (time.time() - start))
     print("Done !")
 
 
     ## Building direct frequencies index
-    print("Building frequencies index...")
+    print("Building frequencies direct index...")
     start = time.time()
     frequencies_index = build_index_frequencies(corp)
 
-    print("Took %f" % (time.time() - start))
+    print("Took %f s" % (time.time() - start))
     print("Done !")
 
     ## Building inverted frequencies index
-    print("Building inverted index...")
+    print("Building frequencies inverted index...")
     start = time.time()
     inverted_index = build_inverted_index_frequencies(frequencies_index)
 
     print("Done !")
-    print("Took %f" % (time.time() - start))
+    print("Took %f s" % (time.time() - start))
+
 
     ## Searching
-    queries = ["we are",
-            "stanford class",
-            "stanford students",
-            "very cool",
-            "the",
-            "a",
-            "the the",
-            "stanford computer science"
-    ]
+    queries = []
+    if argc == 3:
+        queries = [argv[2]]
+    else:
+        queries = ["we are",
+                "stanford class",
+                "stanford students",
+                "very cool",
+                "the",
+                "a",
+                "the the",
+                "stanford computer science"
+        ]
+        ## Appending concatenation of all queries
+        queries.append(' '.join(queries))
 
-    print(" Searching for queries...")
+    print("Queries: ")
+    pp.pprint(queries)
 
+    # Lazy import
+    from pathlib import Path
+    Path("./outputs/").mkdir(parents=True, exist_ok=True)
+
+
+    ## Querying
+    requests_time = []
     for i in range(len(queries)):
         query = queries[i]
+        print("Processing query: '%s'" % query)
+
+        start_time = time.time()
+
         result = boolean_search.query(inverted_index, query)
+
+        end_time = time.time()
+        diff_time = end_time - start_time
+        print("Took %f s" % (diff_time))
+        print("Results length: %d" % (len(result)))
+        print("Results for '%s' are output in './outputs/%d.out'" % (query, i))
+
+        requests_time.append(diff_time)
+
+
         result.sort()
-
-        print("[%s] -> %d" % (query, len(result)))
-
         ## Flashing result to disk
-        f = open("%d.out" % i, "a")
+        f = open("./outputs/%d.out" % i, "w")
         for found_file in result:
             f.write(found_file)
             f.write("\n")
         f.close()
+        print("")
+
+    print("Average query processing time: %fs" % (sum(requests_time) / len(requests_time)))
+    print("Output results are in the 'outputs' folder.")
 
     return 0
 
