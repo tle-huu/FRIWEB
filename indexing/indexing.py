@@ -62,8 +62,3 @@ def build_inverted_index_frequencies(frequencies_index):
 
     return inverted_index
 
-
-
-
-# def build_inverted_index(collection):
-

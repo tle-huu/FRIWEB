@@ -31,11 +31,16 @@ def main(argc, argv):
 
     chosen_model = argv[1]
 
+    ######################################################################################################
+
     ## Tokenizing corpus
     print("Building tokenized corpus...")
     start = time.time()
 
-    corp = build_corpus(PATH)
+    tokenized_corpus = build_corpus(PATH)
+
+    ## Dumping the tokenized_corpus on disk
+    save_file_pickle(tokenized_corpus, "tokenized_corpus.dat")
 
     print("Took %f s" % (time.time() - start))
     print("Done !\n")
@@ -44,7 +49,10 @@ def main(argc, argv):
     ## Building direct frequencies index
     print("Building frequencies direct index...")
     start = time.time()
-    frequencies_index = build_index_frequencies(corp)
+
+    frequencies_index = build_index_frequencies(tokenized_corpus)
+    ## Dumping the tokenized_corpus on disk
+    save_file_pickle(frequencies_index, "frequencies_index.dat")
 
     print("Took %f s" % (time.time() - start))
     print("Done !\n")
@@ -52,12 +60,14 @@ def main(argc, argv):
     ## Building inverted frequencies index
     print("Building frequencies inverted index...")
     start = time.time()
+    
     inverted_index = build_inverted_index_frequencies(frequencies_index)
+    save_file_pickle(inverted_index, "inverted_index.dat")
 
     print("Took %f s" % (time.time() - start))
     print("Done !\n")
 
-
+    ######################################################################################################
     ## Searching
     queries = []
     if argc == 3:
