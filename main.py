@@ -11,13 +11,23 @@ from searching import boolean_search
 from searching import vectorial_search
 from utils.utils import *
 
+from pathlib import Path
+
 pp = pprint.PrettyPrinter(indent = 4)
 
 MODELS_DICT = {'boolean': boolean_search, 'vectorial': vectorial_search}
 
 PATH = os.path.join(os.getcwd(), 'data/corpus')
 
+MODELS_PATH = "./saved_models_and_indexes"
+
 def main(argc, argv):
+
+    load_from_disk = os.path.exists(MODELS_PATH)
+
+    ## Creating outputs directory in does not exits
+    Path(MODELS_PATH).mkdir(parents=True, exist_ok=True)
+
 
     ## TODO: Make a genuine args parser
     ## parser = argparse.ArgumentParser(description='Friweb project')
@@ -34,35 +44,49 @@ def main(argc, argv):
     ######################################################################################################
 
     ## Tokenizing corpus
-    print("Building tokenized corpus...")
     start = time.time()
 
-    tokenized_corpus = build_corpus(PATH)
+    if load_from_disk:
+        print("Loading tokenized corpus...")
+        tokenized_corpus = load_file_pickle(os.path.join(MODELS_PATH, "tokenized_corpus.dat"))
+    else:
+        print("Building tokenized corpus...")
+        tokenized_corpus = build_corpus(PATH)
 
-    ## Dumping the tokenized_corpus on disk
-    # save_file_pickle(tokenized_corpus, "tokenized_corpus.dat")
+        ## Dumping the tokenized_corpus on disk
+        save_file_pickle(tokenized_corpus, os.path.join(MODELS_PATH, "tokenized_corpus.dat"))
+
+
 
     print("Took %f s" % (time.time() - start))
     print("Done !\n")
 
 
     ## Building direct frequencies index
-    print("Building frequencies direct index...")
     start = time.time()
 
-    frequencies_index = build_index_frequencies(tokenized_corpus)
-    ## Dumping the tokenized_corpus on disk
-    # save_file_pickle(frequencies_index, "frequencies_index.dat")
+    if load_from_disk:
+        print("Loading frequencies index...")
+        frequencies_index = load_file_pickle(os.path.join(MODELS_PATH, "frequencies_index.dat"))
+    else:
+        print("Building frequencies direct index...")
+        frequencies_index = build_index_frequencies(tokenized_corpus)
+        ## Dumping the tokenized_corpus on disk
+        save_file_pickle(frequencies_index, os.path.join(MODELS_PATH, "frequencies_index.dat"))
 
     print("Took %f s" % (time.time() - start))
     print("Done !\n")
 
     ## Building inverted frequencies index
-    print("Building frequencies inverted index...")
     start = time.time()
     
-    inverted_index = build_inverted_index_frequencies(frequencies_index)
-    # save_file_pickle(inverted_index, "inverted_index.dat")
+    if load_from_disk:
+        print("Loading inverted index...")
+        inverted_index = load_file_pickle(os.path.join(MODELS_PATH, "inverted_index.dat"))
+    else:
+        print("Building frequencies inverted index...")
+        inverted_index = build_inverted_index_frequencies(frequencies_index)
+        save_file_pickle(inverted_index, os.path.join(MODELS_PATH, "inverted_index.dat"))
 
     print("Took %f s" % (time.time() - start))
     print("Done !\n")
@@ -89,10 +113,8 @@ def main(argc, argv):
     pp.pprint(queries)
     print("")
 
-    # Lazy import
-    from pathlib import Path
+    ## Creating outputs directory in does not exits
     Path("./outputs/").mkdir(parents=True, exist_ok=True)
-
 
     ## Querying
     requests_time = []
