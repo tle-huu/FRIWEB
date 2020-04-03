@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import sys
 import os
 import inspect
@@ -68,6 +70,10 @@ class Analysis:
             self.reset()
 
         print("Loading models...")
+        
+        if not os.path.exists("../saved_models_and_indexes"):
+            print("Models and indexes do not exist yet. Please run main program beforehand.")
+            return 1
 
         inverted_index = load_file_pickle("../saved_models_and_indexes/inverted_index.dat")
         tokenized_corpus = load_file_pickle("../saved_models_and_indexes/tokenized_corpus.dat")
@@ -90,7 +96,7 @@ class Analysis:
         self.most_frequent_ = self.most_frequent_list(overall_frequency)
 
         self.analysed_ = True
-
+        return 0
 
     def plot_frequency_histogram(self, size, save = False):
 
@@ -141,9 +147,8 @@ if __name__ == '__main__':
 
 
     analysis = Analysis()
-    analysis.analyse()
-    analysis.plot_frequency_histogram(50, True)
-
-    analysis.dump()
+    if not analysis.analyse():
+        analysis.plot_frequency_histogram(50, True)
+        analysis.dump()
 
 
